@@ -50,6 +50,10 @@ class krakensdr_source(gr.sync_block):
         self.ctr_iface_port = self.ctrlPort
         self.ctr_iface_thread_lock = Lock() # Used to synchronize the operation of the ctr_iface thread
 
+        self.tcp_send_queue = Queue()
+        self.tcp_send_thread = threading.Thread(target=self.tcp_send_loop)
+        self.tcp_send_thread.start()
+
         #----------Custom Output Interface-----------
         self.tcp_connected = False
         tcpout_port = 3333
@@ -85,6 +89,21 @@ class krakensdr_source(gr.sync_block):
                 self.c, self.addr = self.tcpout_socket.accept()
                 self.tcp_connected = True
                 print("got connection from ", self.addr)
+
+    def tcp_send_loop(self):
+        while not self.stop_threads:
+            try:
+                data = self.tcp_send_queue.get(timeout=1)
+                with self.tcpout_lock:
+                    if self.tcp_connected:
+                        try:
+                            self.c.sendall(data.tobytes())
+                        except Exception as e:
+                            print(f"TCP send error: {e}")
+                            self.c.close()
+                            self.tcp_connected = False
+            except queue.Empty:
+                continue
 
 
     '''
@@ -157,9 +176,12 @@ class krakensdr_source(gr.sync_block):
                     # For example, if the data is complex64, convert to bytes accordingly
                     # If it's a numpy array, use .tobytes()
                     try:
-                        self.c.sendall(data_slice.tobytes())
+                        self.tcp_send_queue.put(data_slice.copy())
                     except Exception as e:
                         print(f"Error sending TCP data on channel {n}: {e}")
+
+                       
+    
                     
                 
 
