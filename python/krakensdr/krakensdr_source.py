@@ -84,7 +84,7 @@ class krakensdr_source(gr.sync_block):
                 
                 self.c, self.addr = self.tcpout_socket.accept()
                 self.tcp_connected = True
-                print("got connection from ", addr)
+                print("got connection from ", self.addr)
 
 
     '''
