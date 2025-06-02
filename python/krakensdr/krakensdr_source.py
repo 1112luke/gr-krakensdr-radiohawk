@@ -82,7 +82,7 @@ class krakensdr_source(gr.sync_block):
         while True:
                 print("Waiting For Connections...")
                 
-                self.c, self.addr = tcpout_socket.accept()
+                self.c, self.addr = self.tcpout_socket.accept()
                 self.tcp_connected = True
                 print("got connection from ", addr)
 
