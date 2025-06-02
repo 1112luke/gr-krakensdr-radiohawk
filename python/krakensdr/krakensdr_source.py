@@ -50,10 +50,6 @@ class krakensdr_source(gr.sync_block):
         self.ctr_iface_port = self.ctrlPort
         self.ctr_iface_thread_lock = Lock() # Used to synchronize the operation of the ctr_iface thread
 
-        self.tcp_send_queue = Queue()
-        self.tcp_send_thread = threading.Thread(target=self.tcp_send_loop)
-        self.tcp_send_thread.start()
-
         #----------Custom Output Interface-----------
         self.tcp_connected = False
         tcpout_port = 3333
@@ -62,6 +58,11 @@ class krakensdr_source(gr.sync_block):
         self.tcpout_socket.listen(5) #begin listening with backlog of 5
         self.tcpout_server_thread = Thread(target = self.tcpout_server)
         self.tcpout_server_thread.start()
+
+        self.tcp_send_queue = queue.Queue()
+        self.tcp_send_thread = threading.Thread(target=self.tcp_send_loop)
+        self.tcp_send_thread.start()
+
 
 
         # Init cpi_len from heimdall header. Sometimes cpi_len is initially zero. If so, loop until we get a non-zero value
