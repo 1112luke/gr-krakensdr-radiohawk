@@ -198,6 +198,7 @@ class krakensdr_source(gr.sync_block):
     def stop(self):
         self.stop_threads = True
         self.buffer_thread.join()
+        self.tcp_send_thread.join(timeout=1)
         self.eth_close()
         return True
 
