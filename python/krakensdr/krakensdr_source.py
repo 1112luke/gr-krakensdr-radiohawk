@@ -50,6 +50,16 @@ class krakensdr_source(gr.sync_block):
         self.ctr_iface_port = self.ctrlPort
         self.ctr_iface_thread_lock = Lock() # Used to synchronize the operation of the ctr_iface thread
 
+        #----------Custom Output Interface-----------
+        self.tcp_connected = False
+        tcpout_port = 3333
+        self.tcpout_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM) #create socket
+        self.tcpout_socket.bind(('', tcpout_port)) #bind to port
+        self.tcpout_socket.listen(5) #begin listening with backlog of 5
+        self.tcpout_server_thread = Thread(target = self.tcpout_server)
+        self.tcpout_server_thread.start()
+
+
         # Init cpi_len from heimdall header. Sometimes cpi_len is initially zero. If so, loop until we get a non-zero value
         self.get_iq_online()
         while self.iq_header.cpi_length == 0: 
@@ -65,11 +75,23 @@ class krakensdr_source(gr.sync_block):
         self.buffer_thread = Thread(target = self.buffer_iq_samples)
         self.buffer_thread.start()
 
+
+
+    #CUSTOM OUTPUT INTERFACE CODE
+    def tcpout_server(self):
+        while True:
+                print("Waiting For Connections...")
+                
+                self.c, self.addr = tcpout_socket.accept()
+                self.tcp_connected = True
+                print("got connection from ", addr)
+
+
     '''
     Continuously receive sample frames from heimdall and put into a buffer.
     Drops frames if buffer is full because downstream DSP was too slow.
     '''
-    
+
     def buffer_iq_samples(self):
         while(True):
 
@@ -123,8 +145,24 @@ class krakensdr_source(gr.sync_block):
 
         try:
             for n in range(self.numChannels):
-                # Only write the section of iq_samples that we left to outputting
-                output_items[n][0:output_items_now] = self.iq_samples[n,self.total_fetched:self.total_fetched + output_items_now]
+                # Slice the IQ samples that we are outputting now
+                data_slice = self.iq_samples[n, self.total_fetched:self.total_fetched + output_items_now]
+
+                # Copy to output_items buffer
+                output_items[n][0:output_items_now] = data_slice
+
+                # Send the same data over TCP connection if connected
+                if self.tcp_connected:
+                    # Convert the slice to bytes - assuming dtype is compatible
+                    # For example, if the data is complex64, convert to bytes accordingly
+                    # If it's a numpy array, use .tobytes()
+                    try:
+                        self.c.sendall(data_slice.tobytes())
+                    except Exception as e:
+                        print(f"Error sending TCP data on channel {n}: {e}")
+                    
+                
+
         except Exception as e:
                 print("Failed to write output_items")
                 print("Exception: " + str(e))
