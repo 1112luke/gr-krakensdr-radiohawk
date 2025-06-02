@@ -60,7 +60,7 @@ class krakensdr_source(gr.sync_block):
         self.tcpout_server_thread.start()
 
         self.tcp_send_queue = queue.Queue()
-        self.tcp_send_thread = threading.Thread(target=self.tcp_send_loop)
+        self.tcp_send_thread = Thread(target=self.tcp_send_loop)
         self.tcp_send_thread.start()
 
 
