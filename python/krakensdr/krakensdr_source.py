@@ -58,6 +58,11 @@ class krakensdr_source(gr.sync_block):
         self.tcpout_socket.listen(5) #begin listening with backlog of 5
         self.tcpout_server_thread = Thread(target = self.tcpout_server)
         self.tcpout_server_thread.start()
+        self.tcpout_lock = Lock()
+
+        self.tcp_send_queue = queue.Queue()
+        self.tcp_send_thread = Thread(target = self.tcp_send_loop)
+        self.tcp_send_thread.start()
 
 
         # Init cpi_len from heimdall header. Sometimes cpi_len is initially zero. If so, loop until we get a non-zero value
@@ -79,16 +84,33 @@ class krakensdr_source(gr.sync_block):
 
     #CUSTOM OUTPUT INTERFACE CODE
     def tcpout_server(self):
-        while True:
-                print("Waiting For Connections...")
-                
+        while  not self.stop_threads:
+            print("Waiting For Connections...")
+            try:
                 self.c, self.addr = self.tcpout_socket.accept()
                 self.tcp_connected = True
-                print("got connection from ", self.addr)
+                print("Got connection from", self.addr)
+            except socket.timeout:
+                continue  # check stop flag again
+            except Exception as e:
+                print("TCP accept error:", e)
+                break
 
-                if(self.stop_threads):
-                    return
 
+    def tcp_send_loop(self):
+        while not self.stop_threads:
+            try:
+                data = self.tcp_send_queue.get(timeout=1)
+                with self.tcpout_lock:
+                    if self.tcp_connected:
+                        try:
+                            self.c.sendall(data.tobytes())
+                        except Exception as e:
+                            print(f"TCP send error: {e}")
+                            self.c.close()
+                            self.tcp_connected = False
+            except queue.Empty:
+                continue
 
     '''
     Continuously receive sample frames from heimdall and put into a buffer.
@@ -154,6 +176,9 @@ class krakensdr_source(gr.sync_block):
                 # Copy to output_items buffer
                 output_items[n][0:output_items_now] = data_slice
 
+                #copy data slice to a queue to send over tcp in another thread
+
+
                 # Send the same data over TCP connection if connected
                 if self.tcp_connected:
                     # Convert the slice to bytes - assuming dtype is compatible
@@ -179,6 +204,7 @@ class krakensdr_source(gr.sync_block):
         self.stop_threads = True
         self.buffer_thread.join()
         self.tcpout_server_thread.join()
+        self.tcp_send_thread.join()
         if(self.tcp_connected):
             self.c.close()
         self.eth_close()
