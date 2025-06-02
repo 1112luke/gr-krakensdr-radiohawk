@@ -86,6 +86,9 @@ class krakensdr_source(gr.sync_block):
                 self.tcp_connected = True
                 print("got connection from ", self.addr)
 
+                if(self.stop_threads):
+                    return
+
 
     '''
     Continuously receive sample frames from heimdall and put into a buffer.
@@ -175,6 +178,7 @@ class krakensdr_source(gr.sync_block):
     def stop(self):
         self.stop_threads = True
         self.buffer_thread.join()
+        self.tcpout_server_thread.join()
         self.eth_close()
         return True
 
