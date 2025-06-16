@@ -28,6 +28,7 @@ class doa_music(gr.sync_block):
         self.array_dist = array_dist
         self.num_elements = num_elements
         self.array_type = array_type
+        self.processing_alg = processing_alg
 
         wavelength = 300 / freq
         if array_type == 'UCA':
