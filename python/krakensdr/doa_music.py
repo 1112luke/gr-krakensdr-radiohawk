@@ -55,10 +55,14 @@ class doa_music(gr.sync_block):
        
         
         if self.processing_alg == "MUSIC":
+            print("USING STOCK MUSIC")
+
             #stock music algorithm
             R = self.corr_matrix(decimated_processed_signal)
             DOA_MUSIC_res = self.DOA_MUSIC(R, self.scanning_vectors, signal_dimension=1)
         elif self.processing_alg == "Correlation_MUSIC":
+            print("USING CORRELTION MUSIC")
+
             #feed in correlation matrices
             chirp, _, _ = self.get_chirp()
             corr_size = self.crosscorrelate(chirp, processed_signal[0]).size
@@ -67,7 +71,6 @@ class doa_music(gr.sync_block):
                 correlated_signal[i,:] = self.crosscorrelate(chirp, processed_signal[i])
             R = self.corr_matrix(correlated_signal)
             DOA_MUSIC_res = self.DOA_MUSIC(R, self.scanning_vectors, signal_dimension=1)
-            DOA_MUSIC_res = np.zeros((self.num_elements, corr_size), dtype = np.complex64)
         doa_plot = self.DOA_plot_util(DOA_MUSIC_res)
         output_items[0][0][:] = doa_plot
                        
