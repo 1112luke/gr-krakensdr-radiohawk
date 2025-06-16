@@ -33,6 +33,10 @@ parameters:
   label: Array Type (UCA or ULA)
   dtype: string
   default: 'UCA'
+- id: processing_alg
+label: Processing Algorithm (MUSIC, Correlation_MUSIC)
+dtype: string
+default: 'MUSIC'
 #- id: ...
 #  label: ...
 #  dtype: ...
