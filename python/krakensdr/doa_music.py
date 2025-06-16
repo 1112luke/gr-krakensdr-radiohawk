@@ -63,7 +63,7 @@ class doa_music(gr.sync_block):
             R = self.corr_matrix(decimated_processed_signal)
             DOA_MUSIC_res = self.DOA_MUSIC(R, self.scanning_vectors, signal_dimension=1)
         elif self.processing_alg == "Correlation_MUSIC":
-            print("USING CORRELTION MUSIC")
+            print("USING CORRELATION MUSIC")
 
             #feed in correlation matrices
             chirp, _, _ = self.get_chirp(num = 10)
