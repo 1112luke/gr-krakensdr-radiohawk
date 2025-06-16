@@ -17,12 +17,14 @@ class doa_music(gr.sync_block):
     """
     docstring for block doa_music
     """
-    def __init__(self, vec_len=1048576, freq=433.0, array_dist=0.33, num_elements=5, array_type='UCA', processing_alg="MUSIC"):
+    def __init__(self, vec_len=1048576, freq=433.0, array_dist=0.33, num_elements=5, array_type='UCA', processing_alg='MUSIC'):
         gr.sync_block.__init__(self,
             name="DOA MUSIC",
             in_sig=[(np.complex64, vec_len)] * num_elements,
             out_sig=[(np.float32, 360)])
             
+        print("INITIALIZED WITH PROCESSING ALG = ", processing_alg)
+
         self.cpi_size = vec_len
         self.freq = freq
         self.array_dist = array_dist
