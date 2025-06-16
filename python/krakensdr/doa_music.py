@@ -66,7 +66,7 @@ class doa_music(gr.sync_block):
             print("USING CORRELTION MUSIC")
 
             #feed in correlation matrices
-            chirp, _, _ = self.get_chirp()
+            chirp, _, _ = self.get_chirp(num = 10)
             corr_size = self.crosscorrelate(chirp, processed_signal[0]).size
             correlated_signal = np.empty((self.num_elements, corr_size), dtype = np.complex64)
             for i in range(self.num_elements):
@@ -192,7 +192,7 @@ class doa_music(gr.sync_block):
         B = 62.5e3  # (125 kHz) bandwidth
         T = 1 / B  # This 'T' is the base sampling period for the chirp's definition (1/Bandwidth).
                 # It is NOT the SDR's actual sampling period (1/sdr_sample_rate).
-        SF = 7  # spreading factor {7,8,9,10,11,12}
+        SF = 6  # spreading factor {7,8,9,10,11,12}
         T_s = (2**SF) * T  # symbol period (total duration of one chirp)
 
         # For a preamble chirp, the symbol value is 0.
