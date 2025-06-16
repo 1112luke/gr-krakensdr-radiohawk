@@ -9,7 +9,7 @@
 
 import numpy as np
 import numpy.linalg as lin
-#from scipy import signal
+import scipy as scipy
 
 from gnuradio import gr
 
@@ -52,8 +52,20 @@ class doa_music(gr.sync_block):
         # Doing decimation in GNU Radio blocks, or uncomment to do decimation in scipy
         decimated_processed_signal = processed_signal
        
-        R = self.corr_matrix(decimated_processed_signal)
-        DOA_MUSIC_res = self.DOA_MUSIC(R, self.scanning_vectors, signal_dimension=1)
+        
+        if self.processing_alg == "MUSIC":
+            #stock music algorithm
+            R = self.corr_matrix(decimated_processed_signal)
+            DOA_MUSIC_res = self.DOA_MUSIC(R, self.scanning_vectors, signal_dimension=1)
+        elif self.processing_alg == "Correlation_MUSIC":
+            #feed in correlation matrices
+            chirp, _, _ = self.get_chirp()
+            corr_size = self.crosscorrelate(chirp, processed_signal[0]).size
+            correlated_signal = np.empty((self.num_elements, corr_size), dtype = np.complex64)
+            for i in range(self.num_elements):
+                correlated_signal[i,:] = self.crosscorrelate(chirp, processed_signal[i])
+            R = self.corr_matrix(correlated_signal)
+            DOA_MUSIC_res = self.DOA_MUSIC(R, self.scanning_vectors, signal_dimension=1)
         doa_plot = self.DOA_plot_util(DOA_MUSIC_res)
         output_items[0][0][:] = doa_plot
                        
@@ -120,8 +132,8 @@ class doa_music(gr.sync_block):
             ADORT[theta_index] = 1 / np.abs(S_theta_.conj().T @ E_ct @ S_theta_)
             theta_index += 1
 
-        return ADORT
-        
+        return ADORT 
+
     def DOA_plot_util(self, DOA_data, log_scale_min=-100):
         """
             This function prepares the calulcated DoA estimation results for plotting.
@@ -137,4 +149,87 @@ class doa_music(gr.sync_block):
                 DOA_data[i] = log_scale_min
 
         return DOA_data
+    
+    def crosscorrelate(self, arr1, arr2):
+        #assume arr2 is the larger array
+        match = scipy.signal.correlate(arr1, arr2, mode = "valid")
+
+        return np.ascontiguousarray(match)
+        '''
+        match = np.abs(match) #get positive part
+
+        #smooth
+        # Calculate rolling average with a window of samplesize/10
+        match = pd.Series(match)
+        window_size = len(match)//8
+        match_smooth = match.rolling(window=window_size).mean()
+        '''
+        
+        #find peaks -- SUBJECT TO MUCH TUNING!!!
+        #peaks = scipy.signal.find_peaks(match_smooth, distance = len(match_smooth)//8, height = 3000)
+
+    def get_chirp(self, sample_rate = 2.048e6, num = 1):
+        """
+        Generates a LoRa chirp signal at a specified SDR sample rate.
+
+        Returns:
+            tuple: A tuple containing:
+                - numpy.ndarray: The complex baseband chirp signal.
+                - numpy.ndarray: The time vector (for plotting).
+                - numpy.ndarray: The k-index vector used in the chirp formula.
+        """
+
+        sdr_sample_rate = sample_rate # Simulate sample rate of sdr.sample_rate = 2.048e6
+
+        # Parameters
+        B = 62.5e3  # (125 kHz) bandwidth
+        T = 1 / B  # This 'T' is the base sampling period for the chirp's definition (1/Bandwidth).
+                # It is NOT the SDR's actual sampling period (1/sdr_sample_rate).
+        SF = 7  # spreading factor {7,8,9,10,11,12}
+        T_s = (2**SF) * T  # symbol period (total duration of one chirp)
+
+        # For a preamble chirp, the symbol value is 0.
+        # In a real LoRa system, this 'w' array would represent the bits
+        # of the data symbol being transmitted.
+        w = [0,0,0,0,0,0,0,0,0,0,0,0]
+
+        # Calculate the decimal symbol value from the binary 'w' array.
+        # For a preamble, this will sum to 0.
+
+        chirps = []
+
+        symbol = 0
+        for h in range(SF):
+            symbol += w[h] * (2**h)
+
+        for i in range(num):
+
+            # Calculate the number of samples for the chirp duration based on the SDR's sample rate.
+            num_samples = int(T_s * sdr_sample_rate)
+
+            # Create the time vector 't' for plotting, spanning the symbol period 'T_s'
+            # with 'num_samples' points.
+            t = np.linspace(start=0, stop=T_s, num=num_samples, endpoint=False)
+
+            # The 'k' in your chirp formula represents a normalized index (or "chip index")
+            # that effectively sweeps from 0 to (2**SF - 1) over the duration of the chirp.
+            # To maintain the "exact same signal" shape at the new sample rate, 'k' must
+            # also span this range (0 to 2**SF) but consist of 'num_samples' points.
+            # np.linspace is ideal for this, mapping the 'num_samples' evenly across the
+            # conceptual range of 0 to 2**SF.
+            k = np.linspace(start=0, stop=(2**SF), num=num_samples, endpoint=False)
+
+
+            # LoRa chirp formula (baseband representation):
+            # This formula generates a complex chirp signal.
+            # The term '((symbol + k) % (2**SF))' handles the cyclic shift based on the symbol value,
+            # ensuring the chirp wraps around within the 2**SF range.
+            # The division by '(2**SF)' normalizes the phase, and the multiplication by 'k'
+            # creates the quadratic phase characteristic of a linear chirp.
+            chirp = np.exp(1j * 2 * np.pi * ((symbol + k) % (2**SF)) / (2**SF) * k)
+
+            chirps.append(chirp)
+
+        output = np.concatenate(chirps)
+        return output, t, k # Return t and k for plotting and verification
         
