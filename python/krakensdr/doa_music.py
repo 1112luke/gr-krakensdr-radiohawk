@@ -82,11 +82,13 @@ class doa_music(gr.sync_block):
             y = np.fromfile("./references/chopped.cfile", dtype = np.complex64)
             x = decimated_processed_signal
 
-            DOA_MUSIC_res = self.ULT(x, y)
+            print("Y", y)
+
+            #DOA_MUSIC_res = self.ULT(x, y)
 
 
-        doa_plot = self.DOA_plot_util(DOA_MUSIC_res)
-        output_items[0][0][:] = doa_plot
+        #doa_plot = self.DOA_plot_util(DOA_MUSIC_res)
+        #output_items[0][0][:] = doa_plot
         return len(output_items[0])
 
 
