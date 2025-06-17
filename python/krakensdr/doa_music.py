@@ -84,7 +84,7 @@ class doa_music(gr.sync_block):
 
             print("Y", y)
 
-            #DOA_MUSIC_res = self.ULT(x, y)
+            DOA_MUSIC_res = self.ULT(x, y)
 
 
         doa_plot = self.DOA_plot_util(DOA_MUSIC_res)
