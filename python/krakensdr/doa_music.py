@@ -79,9 +79,9 @@ class doa_music(gr.sync_block):
             print("ULT")
 
             #get y
-            y = np.fromfile("./references/chopped.cflie", dtype = np.complex64)
+            y = np.fromfile("./references/chopped.cfile", dtype = np.complex64)
             x = decimated_processed_signal
-            
+
             DOA_MUSIC_res = self.ULT(x, y)
 
 
@@ -194,11 +194,16 @@ class doa_music(gr.sync_block):
 
         B_hat = R_xy/R_yy
 
+        thetas = np.deg2rad(np.linspace(0, 90, 91)) 
+        phis = np.deg2rad(np.linspace(-180, 180, 361))
+
+        outputs = np.zeros((len(thetas), len(phis)), dtype=np.float32)
+
         for i in range(thetas.size):
             for j in range(phis.size):
                 outputs[i, j] = np.abs(np.vdot(ULT_gen_scanning_vector(5, i, j), B_hat))**2
 
-        return outputs
+        return outputs[90, :]
 
     def DOA_plot_util(self, DOA_data, log_scale_min=-100):
         """
