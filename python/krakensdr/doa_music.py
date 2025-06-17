@@ -203,7 +203,7 @@ class doa_music(gr.sync_block):
 
         for i in range(thetas.size):
             for j in range(phis.size):
-                outputs[i, j] = np.abs(np.vdot(ULT_gen_scanning_vector(5, i, j), B_hat))**2
+                outputs[i, j] = np.abs(np.vdot(self.ULT_gen_scanning_vector(5, i, j), B_hat))**2
 
         return outputs[90, :]
 
