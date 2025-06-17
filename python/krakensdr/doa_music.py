@@ -197,7 +197,7 @@ class doa_music(gr.sync_block):
         B_hat = R_xy/R_yy
 
         thetas = np.deg2rad(np.linspace(0, 90, 91)) 
-        phis = np.deg2rad(np.linspace(-180, 180, 361))
+        phis = np.deg2rad(np.linspace(-180, 189, 360))
 
         outputs = np.zeros((len(thetas), len(phis)), dtype=np.float32)
 
