@@ -62,6 +62,7 @@ class doa_music(gr.sync_block):
             #stock music algorithm
             R = self.corr_matrix(decimated_processed_signal)
             DOA_MUSIC_res = self.DOA_MUSIC(R, self.scanning_vectors, signal_dimension=1)
+
         elif self.processing_alg == "Correlation_MUSIC":
             print("USING CORRELATION MUSIC")
 
@@ -73,15 +74,31 @@ class doa_music(gr.sync_block):
                 correlated_signal[i,:] = self.crosscorrelate(chirp, processed_signal[i])
             R = self.corr_matrix(correlated_signal)
             DOA_MUSIC_res = self.DOA_MUSIC(R, self.scanning_vectors, signal_dimension=1)
+
+        elif self.processing_alg == "ULT":
+            print("ULT")
+
+            #get y
+            y = np.fromfile("./references/chopped.cflie", dtype = np.complex64)
+            x = decimated_processed_signal
+            
+            DOA_MUSIC_res = self.ULT(x, y)
+
+
         doa_plot = self.DOA_plot_util(DOA_MUSIC_res)
         output_items[0][0][:] = doa_plot
-                       
         return len(output_items[0])
 
 
     def corr_matrix(self, X):
         N = X[0, :].size
         R = np.dot(X, X.conj().T)
+        R = np.divide(R, N)
+        return R
+    
+    def auto_corr_matrix(self, X, Y):
+        N = X[0, :].size
+        R = np.dot(X, Y.conj().T)
         R = np.divide(R, N)
         return R
 
@@ -101,6 +118,16 @@ class doa_music(gr.sync_block):
                 1j * 2 * np.pi * (x * np.cos(np.deg2rad(thetas[i] + offset)) + y * np.sin(np.deg2rad(thetas[i] + offset))))
 
         return np.ascontiguousarray(scanning_vectors)
+
+    def ULT_gen_scanning_vector(self, M, theta, phi):
+
+        a = np.zeros(M, dtype=np.complex64)
+        beta = 2 * np.pi * np.arange(M) / M
+        for m in range(M):
+            phase = (2 * np.pi * self.array_dist / (300/self.freq)) * np.sin(theta * np.pi/180) * np.cos((phi * np.pi/180) - beta[m])
+            a[m] = np.exp(1j * phase)
+
+        return a
         
         
     def DOA_MUSIC(self, R, scanning_vectors, signal_dimension, angle_resolution=1):
@@ -139,7 +166,39 @@ class doa_music(gr.sync_block):
             ADORT[theta_index] = 1 / np.abs(S_theta_.conj().T @ E_ct @ S_theta_)
             theta_index += 1
 
-        return ADORT 
+        return ADORT
+
+    def DOA_ULT(self, x, y):
+        #x is 5 x cpi_size array
+
+        '''
+        # --> Input check
+        if R[:, 0].size != R[0, :].size:
+            print("ERROR: Correlation matrix is not quadratic")
+            return np.ones(1, dtype=np.complex64) * -1  # [(-1, -1j)]
+
+        if R[:, 0].size != scanning_vectors[:, 0].size:
+            print("ERROR: Correlation matrix dimension does not match with the antenna array dimension")
+            return np.ones(1, dtype=np.complex64) * -2
+        
+
+        ADORT = np.zeros(scanning_vectors[0, :].size, dtype=np.complex64)
+        M = R[:, 0].size  # np.size(R, 0)
+
+        '''
+
+        # --- Calculation ---
+        #compute crosscorrelation and autocorrelation matrices
+        R_xy = (1/self.cpi_size) * np.dot(x, np.conj(y).T)
+        R_yy = (1/self.cpi_size) * np.dot(y, np.conj(y).T)
+
+        B_hat = R_xy/R_yy
+
+        for i in range(thetas.size):
+            for j in range(phis.size):
+                outputs[i, j] = np.abs(np.vdot(ULT_gen_scanning_vector(5, i, j), B_hat))**2
+
+        return outputs
 
     def DOA_plot_util(self, DOA_data, log_scale_min=-100):
         """
