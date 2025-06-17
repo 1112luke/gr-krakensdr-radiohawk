@@ -205,7 +205,7 @@ class doa_music(gr.sync_block):
             for j in range(phis.size):
                 outputs[i, j] = np.abs(np.vdot(self.ULT_gen_scanning_vector(5, i, j), B_hat))**2
 
-        return outputs[90, :]
+        return outputs[89, :]
 
     def DOA_plot_util(self, DOA_data, log_scale_min=-100):
         """
