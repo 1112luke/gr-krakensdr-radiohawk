@@ -79,7 +79,7 @@ class doa_music(gr.sync_block):
             print("ULT")
 
             #get y
-            y = np.fromfile("/home/krakenrf/gr-krakensdr/python/krakensdr/references/chopped.cfile", dtype = np.complex64)
+            y = np.fromfile("/home/krakenrf/gr-krakensdr/python/krakensdr/references/chopped16.cfile", dtype = np.complex64)
             x = decimated_processed_signal
 
             print("Y", y)
