@@ -4,7 +4,7 @@ category: "[KrakenSDR]"
 
 templates:
     imports: from gnuradio import krakensdr
-    make: krakensdr.doa_music(${vec_len}, ${freq}, ${array_dist}, ${num_elements}, ${array_type}, ${processing_alg})
+    make: krakensdr.doa_music(${vec_len}, ${freq}, ${array_dist}, ${num_elements}, ${array_type}, ${processing_alg} ${alphamult})
 
 #  Make one 'parameters' list entry for every parameter you want settable from the GUI.
 #     Keys include:
@@ -37,6 +37,10 @@ parameters:
       label: Processing Algorithm (MUSIC, Correlation_MUSIC, Weighted_MUSIC)
       dtype: string
       default: "MUSIC"
+    - id: alphamult
+      label: Multiplier for alpha if using Weighted_MUSIC
+      dtype: int
+      default: 1
 #- id: ...
 #  label: ...
 #  dtype: ...
