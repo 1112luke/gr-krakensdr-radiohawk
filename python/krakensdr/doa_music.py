@@ -195,7 +195,6 @@ class doa_music(gr.sync_block):
         return numerator
 
     def DOA_MUSIC_WEIGHTED(self, R, scanning_vectors, signal_dimension, angle_resolution=1):
-        print("HERE")
         # --> Input check
         if R[:, 0].size != R[0, :].size:
             print("ERROR: Correlation matrix is not quadratic")
@@ -235,6 +234,7 @@ class doa_music(gr.sync_block):
         alpha = min_alpha + 1e-3  # add small margin for numerical stability
 
         alpha = min_alpha*self.alphamult
+        print("Alphaault:", self.alphamult)
 
         print("min_alpha", alpha)
 
