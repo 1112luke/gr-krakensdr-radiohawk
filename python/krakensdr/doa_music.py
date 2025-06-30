@@ -17,7 +17,7 @@ class doa_music(gr.sync_block):
     """
     docstring for block doa_music
     """
-    def __init__(self, vec_len=1048576, freq=433.0, array_dist=0.33, num_elements=5, array_type='UCA', processing_alg='MUSIC', alphamult="1"):
+    def __init__(self, vec_len=1048576, freq=433.0, array_dist=0.33, num_elements=5, array_type='UCA', processing_alg='MUSIC', alphamult=1):
         gr.sync_block.__init__(self,
             name="DOA MUSIC",
             in_sig=[(np.complex64, vec_len)] * num_elements,
@@ -234,7 +234,7 @@ class doa_music(gr.sync_block):
         min_alpha = self.compute_min_alpha(sorted(noise_eigvals, reverse=True))
         alpha = min_alpha + 1e-3  # add small margin for numerical stability
 
-        alpha = min_alpha*2
+        alpha = min_alpha*self.alphamult
 
         print("min_alpha", alpha)
 
