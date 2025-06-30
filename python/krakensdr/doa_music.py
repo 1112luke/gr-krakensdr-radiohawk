@@ -63,6 +63,14 @@ class doa_music(gr.sync_block):
             R = self.corr_matrix(decimated_processed_signal)
             DOA_MUSIC_res = self.DOA_MUSIC(R, self.scanning_vectors, signal_dimension=1)
 
+        if self.processing_alg == "Weighted_MUSIC":
+            print("USING WIEGHTED MUSIC")
+
+            #stock music algorithm
+            R = self.corr_matrix(decimated_processed_signal)
+            DOA_MUSIC_res = self.DOA_MUSIC_WEIGHTED(R, self.scanning_vectors, signal_dimension=1)
+
+
         elif self.processing_alg == "Correlation_MUSIC":
             print("USING CORRELATION MUSIC")
 
@@ -169,6 +177,79 @@ class doa_music(gr.sync_block):
             theta_index += 1
 
         return ADORT
+
+
+
+    def compute_min_alpha(noise_eigvals):
+        lam_max = noise_eigvals[0]
+        lam_min = noise_eigvals[-1]
+
+        if lam_max == lam_min:
+            return 0.0  # Eigenvalues already equal — no need to correct
+
+        numerator = lam_max - 2 * lam_min
+        if numerator <= 0:
+            return 0.0  # Already satisfies condition
+
+        return numerator
+
+    def DOA_MUSIC_WEIGHTED(self, R, scanning_vectors, signal_dimension, angle_resolution=1):
+        # --> Input check
+        if R[:, 0].size != R[0, :].size:
+            print("ERROR: Correlation matrix is not quadratic")
+            return np.ones(1, dtype=np.complex64) * -1  # [(-1, -1j)]
+
+        if R[:, 0].size != scanning_vectors[:, 0].size:
+            print("ERROR: Correlation matrix dimension does not match with the antenna array dimension")
+            return np.ones(1, dtype=np.complex64) * -2
+
+        ADORT = np.zeros(scanning_vectors[0, :].size, dtype=np.complex64)
+        M = R[:, 0].size  # np.size(R, 0)
+
+        # --- Calculation ---
+        # Determine eigenvectors and eigenvalues
+        sigmai, vi = lin.eig(R)
+        sigmai = np.abs(sigmai)
+
+        idx = sigmai.argsort()[::1]  # Sort eigenvectors by eigenvalues, smallest to largest
+        vi = vi[:, idx]
+
+        # Generate noise subspace matrix
+        noise_dimension = M - signal_dimension
+
+        E = np.zeros((M, noise_dimension), dtype=np.complex64)
+        for i in range(noise_dimension):
+            E[:, i] = vi[:, i]
+
+        #-----WEIGHTING------
+        # Generate noise subspace matrix and corrected projection matrix
+        noise_dimension = M - signal_dimension
+        noise_eigvals = sigmai[:noise_dimension]
+        noise_eigvecs = vi[:, :noise_dimension]
+
+        #calculate alpha
+        # Calculate alpha
+        min_alpha = compute_min_alpha(sorted(noise_eigvals, reverse=True))
+        alpha = min_alpha + 1e-3  # add small margin for numerical stability
+
+        print("min_alpha", alpha)
+
+        E_ct = np.zeros((M, M), dtype=np.complex64)
+        for i in range(noise_dimension):
+            eigvec = noise_eigvecs[:, i].reshape(-1, 1)
+            corrected_lambda = noise_eigvals[i] + alpha
+            E_ct += corrected_lambda**2 * (eigvec @ eigvec.conj().T)
+
+        theta_index = 0
+        for i in range(scanning_vectors[0, :].size):
+            S_theta_ = scanning_vectors[:, i]
+            S_theta_ = np.ascontiguousarray(S_theta_.T)
+            ADORT[theta_index] = 1 / np.abs(S_theta_.conj().T @ E_ct @ S_theta_)
+            theta_index += 1
+
+        return ADORT
+
+        
 
     def DOA_ULT(self, x, y):
         #x is 5 x cpi_size array
