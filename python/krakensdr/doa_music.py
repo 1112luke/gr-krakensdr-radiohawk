@@ -180,7 +180,7 @@ class doa_music(gr.sync_block):
 
 
 
-    def compute_min_alpha(noise_eigvals):
+    def compute_min_alpha(self, noise_eigvals):
         lam_max = noise_eigvals[0]
         lam_min = noise_eigvals[-1]
 
@@ -230,7 +230,7 @@ class doa_music(gr.sync_block):
 
         #calculate alpha
         # Calculate alpha
-        min_alpha = compute_min_alpha(sorted(noise_eigvals, reverse=True))
+        min_alpha = self.compute_min_alpha(sorted(noise_eigvals, reverse=True))
         alpha = min_alpha + 1e-3  # add small margin for numerical stability
 
         print("min_alpha", alpha)
