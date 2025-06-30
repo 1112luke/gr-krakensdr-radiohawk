@@ -233,7 +233,7 @@ class doa_music(gr.sync_block):
         min_alpha = self.compute_min_alpha(sorted(noise_eigvals, reverse=True))
         alpha = min_alpha + 1e-3  # add small margin for numerical stability
 
-        alpha = 1
+        alpha = min_alpha*2
 
         print("min_alpha", alpha)
 
