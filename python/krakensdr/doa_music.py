@@ -234,7 +234,7 @@ class doa_music(gr.sync_block):
         alpha = min_alpha + 1e-3  # add small margin for numerical stability
 
         alpha = min_alpha*self.alphamult
-        print("Alphaault:", self.alphamult)
+        print("AlphaMult:", self.alphamult)
 
         print("min_alpha", alpha)
 
