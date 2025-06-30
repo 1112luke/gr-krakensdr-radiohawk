@@ -34,7 +34,7 @@ parameters:
       dtype: string
       default: "UCA"
     - id: processing_alg
-      label: Processing Algorithm (MUSIC, Correlation_MUSIC)
+      label: Processing Algorithm (MUSIC, Correlation_MUSIC, Weighted_MUSIC)
       dtype: string
       default: "MUSIC"
 #- id: ...
