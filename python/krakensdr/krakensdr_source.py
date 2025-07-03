@@ -66,7 +66,7 @@ class krakensdr_source(gr.sync_block):
         self.buffer_thread.start()
 
         #---------Custom UDP----------
-        self.udpthread = Thread(target = self.udpserver)
+        self.udpthread = Thread(target = self.udpthread)
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) #UDP socket
         self.udpport = 3332
         self.udpthread.start()
