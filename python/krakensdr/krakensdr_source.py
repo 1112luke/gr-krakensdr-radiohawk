@@ -142,7 +142,7 @@ class krakensdr_source(gr.sync_block):
 
     def udpthread(self):
         print("in the udpthread!")
-        self.sock.bind(("127.0.0.1", self.udpport))
+        self.sock.bind(("192.168.10.33", self.udpport))
         while not self.stop_threads:
             print("in the threading!")
             data, addr = self.sock.recvfrom(1024)
