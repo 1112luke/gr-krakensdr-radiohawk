@@ -74,7 +74,8 @@ class krakensdr_source(gr.sync_block):
 
         #---------Custom UDP Send----------
         self.udpsendthread = Thread(target = self.udpsendthread)
-        self.sendsock = socket.socket(socket.SOL_SOCKET, socket.SO_BROADCAST, 1) #UDP socket
+        self.sendsock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  # create UDP socket
+        self.sendsock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)  # enable broadcast
         self.udpsendport = 3331
         self.udpsendthread.start()
 
