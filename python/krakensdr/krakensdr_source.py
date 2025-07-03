@@ -150,10 +150,8 @@ class krakensdr_source(gr.sync_block):
 
     #Receive frequency commands on port 3332
     def udpthread(self):
-        print("in the udpthread!")
         self.sock.bind(("192.168.10.33", self.udpport))
         while not self.stop_threads:
-            print("in the threading!")
             data, addr = self.sock.recvfrom(1024)
             data = data.decode().strip()
             print("GOT MESSAGE: ", data)
@@ -184,7 +182,6 @@ class krakensdr_source(gr.sync_block):
         self.set_if_gain(self.gain)
 
     def set_freq(self, freq):
-        print("IN SET_FREQ")
         self.freq = freq
         self.set_center_freq(int(freq*10**6))
 
