@@ -165,7 +165,7 @@ class krakensdr_source(gr.sync_block):
     
     def udpsendthread(self):
         while not self.stop_threads:
-            self.sendsock.sendto(self.freq.encode(), (("192.168.10.33", self.udpsendport)))
+            self.sendsock.sendto(str(self.freq).encode(), (("192.168.10.33", self.udpsendport)))
             time.sleep(0.5) #send frequence every 0.5 seconds
             
 
