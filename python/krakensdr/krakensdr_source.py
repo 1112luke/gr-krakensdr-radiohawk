@@ -152,7 +152,7 @@ class krakensdr_source(gr.sync_block):
                 currfreq = data.split(":", 1)[1]
                 print("Changing frequency to ", currfreq)
                 try:
-                    self.set_freq(currfreq)
+                    self.set_freq(int(currfreq))
                 except Exception as error:
                     print("INVALID FREQUENCY: ", error)
             
