@@ -184,6 +184,7 @@ class krakensdr_source(gr.sync_block):
         self.set_if_gain(self.gain)
 
     def set_freq(self, freq):
+        print("IN SET_FREQ")
         self.freq = freq
         self.set_center_freq(int(freq*10**6))
 
@@ -239,6 +240,7 @@ class krakensdr_source(gr.sync_block):
                 :param: msg: Message bytes, that will be sent ont the control interface
                 :type:  msg: Byte array
         """
+        print("IN IFACE")
         self.ctr_iface_thread_lock.acquire()
         print("Sending control message")
         self.ctr_iface_socket.send(msg_bytes)
@@ -266,6 +268,7 @@ class krakensdr_source(gr.sync_block):
                 :type:  center_freq: float
         """
         if self.receiver_connection_status: # Check connection
+            print("IN SET_CENTER_FREQ")
             self.freq = int(center_freq)
             # Set center frequency
             cmd="FREQ"
