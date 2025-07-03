@@ -141,8 +141,10 @@ class krakensdr_source(gr.sync_block):
         return output_items_now  # Output number of items
 
     def udpthread(self):
+        print("in the udpthread!")
         self.sock.bind(("127.0.0.1", self.udpport))
         while not self.stop_threads:
+            print("in the threading!")
             data, addr = self.sock.recvfrom(1024)
             print("GOT MESSAGE: %s" % data)
             
