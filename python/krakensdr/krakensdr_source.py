@@ -65,11 +65,17 @@ class krakensdr_source(gr.sync_block):
         self.buffer_thread = Thread(target = self.buffer_iq_samples)
         self.buffer_thread.start()
 
-        #---------Custom UDP----------
+        #---------Custom UDP Receive----------
         self.udpthread = Thread(target = self.udpthread)
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) #UDP socket
         self.udpport = 3332
         self.udpthread.start()
+
+        #---------Custom UDP Send----------
+        self.udpsendthread = Thread(target = self.udpsendthread)
+        self.sendsock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) #UDP socket
+        self.udpsendport = 3331
+        self.udpsendthread.start()
 
     '''
     Continuously receive sample frames from heimdall and put into a buffer.
@@ -140,6 +146,7 @@ class krakensdr_source(gr.sync_block):
 
         return output_items_now  # Output number of items
 
+    #Receive frequency commands on port 3332
     def udpthread(self):
         print("in the udpthread!")
         self.sock.bind(("192.168.10.33", self.udpport))
@@ -155,11 +162,17 @@ class krakensdr_source(gr.sync_block):
                     self.set_freq(int(currfreq))
                 except Exception as error:
                     print("INVALID FREQUENCY: ", error)
+    
+    def udpsendthread(self):
+        while not self.stop_threads:
+            self.sendsock.sendto(self.freq.encode(), (("192.168.10.33", self.udpsendport)))
+            time.sleep(0.5) #send frequence every 0.5 seconds
             
 
     def stop(self):
         self.stop_threads = True
-        self.udpthread.join
+        self.udpthread.join()
+        self.udpsendthread.join()
         self.buffer_thread.join()
         self.eth_close()
         return True
