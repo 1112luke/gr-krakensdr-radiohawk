@@ -65,11 +65,17 @@ class krakensdr_source(gr.sync_block):
         self.buffer_thread = Thread(target = self.buffer_iq_samples)
         self.buffer_thread.start()
 
+        #---------Custom UDP----------
+        self.udpthread = Thread(target = self.udpserver)
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) #UDP socket
+        self.udpport = 3332
+        self.udpthread.start()
+
     '''
     Continuously receive sample frames from heimdall and put into a buffer.
     Drops frames if buffer is full because downstream DSP was too slow.
     '''
-    
+
     def buffer_iq_samples(self):
         while(True):
 
@@ -134,8 +140,16 @@ class krakensdr_source(gr.sync_block):
 
         return output_items_now  # Output number of items
 
+    def udpthread(self):
+        self.sock.bind(("127.0.0.1", self.udpport))
+        while not self.stop_threads:
+            data, addr = self.sock.recvfrom(1024)
+            print("GOT MESSAGE: %s" % data)
+            
+
     def stop(self):
         self.stop_threads = True
+        self.udpthread.join
         self.buffer_thread.join()
         self.eth_close()
         return True
