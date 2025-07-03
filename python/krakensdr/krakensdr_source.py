@@ -147,6 +147,10 @@ class krakensdr_source(gr.sync_block):
             print("in the threading!")
             data, addr = self.sock.recvfrom(1024)
             print("GOT MESSAGE: %s" % data)
+            if(data.startswith("FREQ")):
+                currfreq = data.split(":", 1)[1]
+                print("Changing frequency to ", currfreq)
+                self.set_freq(currfreq)
             
 
     def stop(self):
