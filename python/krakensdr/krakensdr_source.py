@@ -149,7 +149,7 @@ class krakensdr_source(gr.sync_block):
         return output_items_now  # Output number of items
 
 
-    def get_eth0_ip():
+    def get_eth0_ip(self):
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         try:
             # IP in same subnet as eth0 to force eth0 path
@@ -160,7 +160,7 @@ class krakensdr_source(gr.sync_block):
 
     #Receive frequency commands on port 3332
     def udpthread(self):
-        self.sock.bind((get_eth0_ip(), self.udpport))
+        self.sock.bind((self.get_eth0_ip(), self.udpport))
         while not self.stop_threads:
             data, addr = self.sock.recvfrom(1024)
             data = data.decode().strip()
@@ -176,7 +176,7 @@ class krakensdr_source(gr.sync_block):
     def udpsendthread(self):
 
         # Bind to eth0 dynamically
-        local_ip = get_eth0_ip()
+        local_ip = self.get_eth0_ip_ip()
         self.sendsock.bind((local_ip, 0))
 
         while not self.stop_threads:
