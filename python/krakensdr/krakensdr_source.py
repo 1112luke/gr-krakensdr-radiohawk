@@ -148,9 +148,19 @@ class krakensdr_source(gr.sync_block):
 
         return output_items_now  # Output number of items
 
+
+    def get_eth0_ip():
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        try:
+            # IP in same subnet as eth0 to force eth0 path
+            s.connect(("192.168.10.1", 1))
+            return s.getsockname()[0]
+        finally:
+            s.close()
+
     #Receive frequency commands on port 3332
     def udpthread(self):
-        self.sock.bind(("192.168.10.33", self.udpport))
+        self.sock.bind((get_eth0_ip(), self.udpport))
         while not self.stop_threads:
             data, addr = self.sock.recvfrom(1024)
             data = data.decode().strip()
@@ -164,6 +174,11 @@ class krakensdr_source(gr.sync_block):
                     print("INVALID FREQUENCY: ", error)
     
     def udpsendthread(self):
+
+        # Bind to eth0 dynamically
+        local_ip = get_eth0_ip()
+        self.sendsock.bind((local_ip, 0))
+
         while not self.stop_threads:
             self.sendsock.sendto(str(self.freq).encode(), (("192.168.10.255", self.udpsendport)))
             time.sleep(0.5) #send frequence every 0.5 seconds
