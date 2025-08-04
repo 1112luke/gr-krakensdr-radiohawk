@@ -176,7 +176,7 @@ class krakensdr_source(gr.sync_block):
     def udpsendthread(self):
 
         # Bind to eth0 dynamically
-        local_ip = self.get_eth0_ip_ip()
+        local_ip = self.get_eth0_ip()
         self.sendsock.bind((local_ip, 0))
 
         while not self.stop_threads:
