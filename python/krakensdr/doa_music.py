@@ -17,7 +17,7 @@ class doa_music(gr.sync_block):
     """
     docstring for block doa_music
     """
-    def __init__(self, vec_len=1048576, freq=433.0, array_dist=0.33, num_elements=5, array_type='UCA', processing_alg='MUSIC', alphamult=2):
+    def __init__(self, vec_len=1048576, freq=433.0, array_dist=0.33, num_elements=5, array_type='UCA', processing_alg='MUSIC', alphamult=2, num_sources=1):
         gr.sync_block.__init__(self,
             name="DOA MUSIC",
             in_sig=[(np.complex64, vec_len)] * num_elements,
@@ -32,6 +32,7 @@ class doa_music(gr.sync_block):
         self.array_type = array_type
         self.processing_alg = processing_alg
         self.alphamult = alphamult
+        self.num_sources = num_sources
 
         wavelength = 300 / freq
         if array_type == 'UCA':
@@ -62,14 +63,14 @@ class doa_music(gr.sync_block):
 
             #stock music algorithm
             R = self.corr_matrix(decimated_processed_signal)
-            DOA_MUSIC_res = self.DOA_MUSIC(R, self.scanning_vectors, signal_dimension=1)
+            DOA_MUSIC_res = self.DOA_MUSIC(R, self.scanning_vectors, signal_dimension=self.num_sources)
 
         if self.processing_alg == "Weighted_MUSIC":
             print("USING WIEGHTED MUSIC")
 
             #stock music algorithm
             R = self.corr_matrix(decimated_processed_signal)
-            DOA_MUSIC_res = self.DOA_MUSIC_WEIGHTED(R, self.scanning_vectors, signal_dimension=1)
+            DOA_MUSIC_res = self.DOA_MUSIC_WEIGHTED(R, self.scanning_vectors, signal_dimension=self.num_sources)
 
 
         elif self.processing_alg == "Correlation_MUSIC":
@@ -82,7 +83,7 @@ class doa_music(gr.sync_block):
             for i in range(self.num_elements):
                 correlated_signal[i,:] = self.crosscorrelate(chirp, processed_signal[i])
             R = self.corr_matrix(correlated_signal)
-            DOA_MUSIC_res = self.DOA_MUSIC(R, self.scanning_vectors, signal_dimension=1)
+            DOA_MUSIC_res = self.DOA_MUSIC(R, self.scanning_vectors, signal_dimension=self.num_sources)
 
         elif self.processing_alg == "ULT":
             print("ULT")
