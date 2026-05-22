@@ -59,7 +59,7 @@ class doa_music(gr.sync_block):
        
         
         if self.processing_alg == "MUSIC":
-            print("USING STOCK MUSIC")
+            print(f"USING STOCK MUSIC, Sources: {self.num_sources}")
 
             #stock music algorithm
             R = self.corr_matrix(decimated_processed_signal)
